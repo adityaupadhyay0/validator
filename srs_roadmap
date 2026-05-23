@@ -1,0 +1,203 @@
+Software Requirements Specification (SRS) & Roadmap: Aegis-Val Framework
+
+1. Executive Summary & Vision
+
+1.1 Document Overview
+
+This document specifies the software requirements and strategic roadmap for Aegis-Val, an enterprise-grade, world-class AI Validation and Governance Framework. Aegis-Val is designed to transition organizations from deterministic software QA paradigms to continuous, probabilistic AI system validation.
+
+1.2 System Vision
+
+Aegis-Val acts as an end-to-end quality, security, and compliance wrapper for large language models, agentic workflows, and Retrieval-Augmented Generation (RAG) pipelines. It operationalizes advanced evaluation workflows like Critique Shadowing, enforces low-latency runtime safety via adaptive guardrail architectures, and automatically compiles audit-ready regulatory artifacts for global compliance frameworks.
+
+2. System Architecture & High-Level Design
+
+The Aegis-Val architecture is divided into three core environments: Offline Evaluation Engine, Online Runtime Guardrail Orchestrator, and the Governance & Regulatory Compiler.
+
+                           +----------------------------------------+
+                           |       Data Pipeline & ETL Auditing     |
+                           +-------------------+--------------------+
+                                               |
+                                               v
++----------------------------------------------+----------------------------------------------+
+|                                ONLINE RUNTIME ENVIRONMENT                                   |
+|                                                                                             |
+|                     +----------------------------------------+                              |
+|                     |             User Prompt                |                              |
+|                     +-------------------+--------------------+                              |
+|                                         |                                                   |
+|                                         v                                                   |
+|                     +-------------------+--------------------+                              |
+|                     |        Pre-LLM Guardrails (Regex/PII)  |                              |
+|                     +-------------------+--------------------+                              |
+|                                         |                                                   |
+|                                         v Passed                                            |
+|                     +-------------------+--------------------+                              |
+|                     |           Generative LLM               |                              |
+|                     +-------------------+--------------------+                              |
+|                                         |                                                   |
+|                                         v Raw Draft                                         |
+|                     +-------------------+--------------------+       Self-Correction Loop   |
+|      +------------->|       Post-LLM Guardrail Evaluator     +-------------------------+    |
+|      |              +-------------------+--------------------+                         |    |
+|      |                                  |                                              |    |
+|      |                                  | Passed                                       v    |
+|      |                                  v                                    +---------+--+ |
+|      |                      +------------------------+                       | Diagnostic | |
+|      |                      |  Safe Delivery to User |                       |   Prompt   | |
+|      |                      +------------------------+                       +---------+--+ |
+|      |                                  |                                              |    |
+|      |                                  v                                              |    |
+|      +----------------------------------+----------------------------------------------+    |
+|                                         | Trace Stream                                      |
++-----------------------------------------v---------------------------------------------------+
+                                          |
++-----------------------------------------v---------------------------------------------------+
+|                               OFFLINE EVALUATION ENGINE                                     |
+|                                                                                             |
+|  +---------------------------+  +---------------------------+  +-------------------------+  |
+|  |    Critique Shadowing     |  |   Reference-Based Eval    |  |  Reference-Free Eval    |  |
+|  |     (Expert Judge)        |  |    (Golden Datasets)      |  |  (Ad-hoc G-Eval Runs)   |  |
+|  +---------------------------+  +---------------------------+  +-------------------------+  |
++-----------------------------------------+---------------------------------------------------+
+                                          |
++-----------------------------------------v---------------------------------------------------+
+|                             GOVERNANCE & COMPLIANCE GATE                                    |
+|                                                                                             |
+|         +-------------------------------------------------------------------------+         |
+|         |               Automated EU AI Act Annex IV Documentation Engine         |         |
+|         +-------------------------------------------------------------------------+         |
++---------------------------------------------------------------------------------------------+
+
+
+3. Functional Requirements (FR)
+
+3.1 Offline Evaluation Engine (FR-1)
+
+FR-1.1 Critique Shadowing Orchestrator: The system shall provide an interface for Domain Experts to review system traces, submit binary classifications (Pass/Fail), and record natural language justifications.
+
+FR-1.2 Judge Bootstrap Engine: The system shall ingest expert critiques and use them to auto-generate few-shot prompt templates for LLM-as-a-Judge agents.
+
+FR-1.3 Evaluator Discrepancy Matrix: The system shall compute inter-annotator agreement metrics (e.g., Cohen's Kappa) between human experts and LLM-as-a-Judge agents, highlighting divergence clusters for prompt revision.
+
+FR-1.4 Micro-Rubric Slicer: Rather than holistic scoring, the system shall segment evaluation tasks into targeted, modular criteria (e.g., "hallucination check," "brand compliance," "instruction adherence") and execute them across specialized, small-parameter judge models.
+
+3.2 Online Runtime Guardrails (FR-2)
+
+FR-2.1 Bidirectional Guardrail Pipeline: The system shall intercept incoming payloads (Pre-LLM) and outgoing generations (Post-LLM) in real time.
+
+FR-2.2 Multi-Tier Engine Support: The system shall support both rules-based, deterministic scanners (Regex, structural validation) and heuristic semantic engines (embedding-based vector classification, Llama Guard/Guardrails AI).
+
+FR-2.3 Reactive Self-Correction Loop: When a post-LLM guardrail triggers a validation failure, the system shall programmatically halt output delivery, bundle the raw draft, append the specific validation violation text, and route a correction payload back to the generator LLM.
+
+FR-2.4 Stacking Optimization Module: The system shall provide a visual calculator and optimizer to monitor and mitigate "guardrail stacking decay" (preventing compound false-positives from locking down benign user prompts).
+
+3.3 Security & Pipeline Validation (FR-3)
+
+FR-3.1 Automated Red Teaming Execution: The system shall run scheduled, agentic adversarial simulations against production endpoints to identify boundary exploits, prompt injections, and privilege-escalation vectors.
+
+FR-3.2 Ingestion & ETL Data Auditing: The system shall monitor RAG ingestion pipelines, verifying source document compliance, licensing parameters, and running automated data-lineage scans prior to chunking and vector storage.
+
+3.4 Regulatory Gating & Compliance Generator (FR-4)
+
+FR-4.1 Technical Documentation Assembler (Annex IV): The system shall automatically aggregate system version logs, data-profiling metrics, human-in-the-loop audit logs, and red-teaming reports to generate compliant Technical Files matching Article 11 / Annex IV of the EU AI Act.
+
+FR-4.2 Automated Compliance Mapping: The system shall map pipeline validations directly to ISO/IEC 42001 clauses and NIST AI RMF functions, flagging missing controls or gaps in the continuous integration pipelines.
+
+4. Technical Specifications & Mathematical Controls
+
+4.1 Stacking Reliability Mathematics
+
+To prevent high false-positive rates when utilizing multiple independent guardrails, the system must enforce strict operational constraints based on the compound probability of false positives.
+
+Let $k$ be the number of independent runtime guardrails, and let $P(FP_i)$ be the probability of a false positive for the $i$-th guardrail. The aggregate false-positive rate $P(FP_{\text{total}})$ is defined mathematically as:
+
+$$P(FP_{\text{total}}) = 1 - \prod_{i=1}^{k} (1 - P(FP_i))$$
+
+Operational Constraint: Aegis-Val's optimizer shall flag any guardrail stack where the estimated compound $P(FP_{\text{total}}) > 0.15$. The system will automatically recommend moving high-latency, higher-FP evaluations to asynchronous, non-blocking post-execution tracing, or suggest substituting a heuristic check with a deterministic, low-error check.
+
+4.2 API Specifications: Critique Shadowing Pipeline
+
+The system shall expose the following JSON schema endpoints for managing the human-to-judge loop:
+
+Endpoint: POST /api/v1/critique-shadowing/submit
+
+Saves an expert critique of a specific system output.
+
+{
+  "trace_id": "tr-98317a-0982",
+  "expert_uid": "usr_9921",
+  "assessment": "FAIL",
+  "critique": "The assistant recommended the 'Premium Deluxe Pro' package, which was discontinued on Q1 2026. This violates safety policy 4.2 (advertising unavailable goods).",
+  "metadata": {
+    "domain": "e-commerce-sales",
+    "associated_policy_id": "policy_4.2"
+  }
+}
+
+
+Endpoint: POST /api/v1/evaluators/compile-judge
+
+Generates a specialized LLM-as-a-Judge system prompt from accumulated critiques.
+
+{
+  "evaluator_name": "E-Commerce Out-of-Stock Policy Judge",
+  "associated_policy_id": "policy_4.2",
+  "minimum_few_shot_examples": 5,
+  "target_model": "gemini-2.5-flash-preview-09-2025"
+}
+
+
+5. System Implementation & Evolution Roadmap
+
+Aegis-Val's development is structured across three core generational phases spanning from 2026 to 2030, matching the global evolution of AI validation engineering.
+
+       2026                 2027                 2028                 2029                 2030
+        |--------------------|--------------------|--------------------|--------------------|
+  [ Phase 1: Guardian Agents ]
+  - Critique Shadowing Core Engine
+  - Real-time Bidirectional Guardrails
+  - EU AI Act Annex IV Document Generator
+
+                            [ Phase 2: Multi-Modal Expansion ]
+                            - Native Multimodal Validation
+                            - Continuous Embedded/Physical Auditing
+                            - Multi-Agent Orchestration Testing
+
+                                                 [ Phase 3: Autonomous Self-Healing Systems ]
+                                                 - Closed-Loop Production Policy Evolution
+                                                 - Continuous Reinforcement via Human Traces
+                                                 - Hardware-Agile Auto-Scaling Optimization
+
+
+5.1 Phase 1: Guardian Agent Core Infrastructure (2026–2027)
+
+Focus: Establishment of core reference-based and reference-free evaluation flows, real-time guardrail execution, and automated EU AI Act documentation.
+
+Milestones:
+
+Q3 2026: Launch of the Critique Shadowing module, supporting expert-driven label collection and instant feedback synchronization.
+
+Q4 2026: Implementation of the automated EU AI Act Technical File compiler (exporting certified JSON/PDF files matching Annex IV requirements).
+
+Q1 2027: Deployment of real-time Guardrail Orchestrator with integrated, sub-500ms latency self-correction loops.
+
+5.2 Phase 2: Multi-Modal & Agentic Verification (2027–2028)
+
+Focus: Scaling evaluation architectures to audit physical systems, complex multi-turn multi-agent state machines, and multi-modal interactions (audio, image, code generation).
+
+Milestones:
+
+Q3 2027: Launch of Cross-Modal Consistency checking (verifying that generated audio/images correspond logically and safely with raw text traces).
+
+Q1 2028: Implementation of Agentic State Machine auditing—actively mapping execution graphs to prevent loop traps, rogue tool invocation, and security escapes.
+
+5.3 Phase 3: Autonomous Self-Healing & Closed-Loop Adaptation (2028–2030)
+
+Focus: Completely autonomous quality platforms capable of self-correcting based on operational parameters and user feedback, requiring zero human engineering overhead for system drift remediation.
+
+Milestones:
+
+Q2 2029: Release of Self-Healing Agent Pipelines that dynamically rewrite system prompts and context-retrieval routing on the fly in response to detected instruction drift.
+
+Q4 2029: Deep integration with hardware-agile compute routing, dynamically migrating validator instances across mixed GPU arrays (e.g., T4, A100, custom silicon) to balance operational cost, target accuracy, and strict latency SLAs.
